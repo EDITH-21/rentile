@@ -1,0 +1,100 @@
+/* Main stylesheet for Rentile Rental Marketplace */
+body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #f7fafd;
+    color: #222;
+    margin: 0;
+    padding: 0;
+}
+
+.navbar {
+    background: #1976d2;
+    color: #fff;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.navbar a {
+    color: #fff;
+    text-decoration: none;
+    margin: 0 1rem;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+.navbar a:hover {
+    color: #90caf9;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 2rem auto;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
+    padding: 2rem;
+}
+
+.btn {
+    background: #1976d2;
+    color: #fff;
+    border: none;
+    padding: 0.7rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.2s;
+}
+.btn:hover {
+    background: #1565c0;
+}
+
+.card {
+    background: #f4faff;
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(25, 118, 210, 0.06);
+    padding: 1.2rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.status-badge {
+    padding: 0.2rem 0.7rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-left: 0.5rem;
+}
+.status-badge.verified {
+    background: #43a047;
+    color: #fff;
+}
+.status-badge.pending {
+    background: #ffa726;
+    color: #fff;
+}
+.status-badge.suspended {
+    background: #e53935;
+    color: #fff;
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 0.7rem;
+    margin: 0.5rem 0 1rem 0;
+    border: 1px solid #bdbdbd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+@media (max-width: 700px) {
+    .container {
+        padding: 1rem;
+    }
+    .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

@@ -46,5 +46,15 @@ CREATE TABLE admin (
     password VARCHAR(255) NOT NULL
 );
 
--- Insert default admin
+-- Notifications table
+CREATE TABLE notifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL, -- owner to notify
+    message VARCHAR(255) NOT NULL,
+    link VARCHAR(255),
+    is_read TINYINT(1) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 INSERT INTO admin (username, password) VALUES ('admin', '$2y$10$wH6Qw1Qw1Qw1Qw1Qw1Qw1u1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1'); -- password: admin123 (bcrypt hash)

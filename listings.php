@@ -2,8 +2,50 @@
 include 'includes/session.php';
 include 'includes/db.php';
 
+// Handle rental request
+$success_msg = '';
+if (isset($_POST['rent_item_id']) && isset($_SESSION['user_id'])) {
+    $item_id = intval($_POST['rent_item_id']);
+    $user_id = $_SESSION['user_id'];
+    // Get item and owner
+$stmt = $conn->prepare('SELECT * FROM listings WHERE id=? AND status="approved"');
+    $stmt->bind_param('i', $item_id);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $item = $res->fetch_assoc();
+    $stmt->close();
+    if ($item && $item['user_id'] != $user_id) {
+        $owner_id = $item['user_id'];
+        $rent_date = date('Y-m-d');
+        $amount = $item['price_per_day'];
+        // Check if already requested
+        $stmt = $conn->prepare('SELECT id FROM transactions WHERE listing_id=? AND renter_id=? AND status="pending"');
+        $stmt->bind_param('ii', $item_id, $user_id);
+        $stmt->execute();
+        $stmt->store_result();
+        if ($stmt->num_rows == 0) {
+            $stmt->close();
+            // Create pending transaction
+            $stmt = $conn->prepare('INSERT INTO transactions (listing_id, renter_id, owner_id, rent_date, amount, status) VALUES (?, ?, ?, ?, ?, "pending")');
+            $stmt->bind_param('iiisd', $item_id, $user_id, $owner_id, $rent_date, $amount);
+            $stmt->execute();
+            $stmt->close();
+            // Notify owner
+            $msg = 'Your item "' . $item['title'] . '" has a new rental request.';
+            $link = 'owner_rentals.php';
+            $stmt = $conn->prepare('INSERT INTO notifications (user_id, message, link) VALUES (?, ?, ?)');
+            $stmt->bind_param('iss', $owner_id, $msg, $link);
+            $stmt->execute();
+            $stmt->close();
+            $success_msg = 'Rental request sent! The owner will confirm.';
+        } else {
+            $success_msg = 'You have already requested to rent this item.';
+        }
+    }
+}
+
 // Filters
-$where = "WHERE status='approved'";
+$where = "WHERE l.status='approved'";
 $params = [];
 if (!empty($_GET['category'])) {
     $where .= " AND category=?";
@@ -62,6 +104,9 @@ $stmt->close();
         <input type="number" name="max_price" placeholder="Max Price" min="0">
         <button class="btn" type="submit">Filter</button>
     </form>
+    <?php if ($success_msg): ?>
+        <div style="color:green;margin-bottom:1rem;"> <?php echo $success_msg; ?> </div>
+    <?php endif; ?>
     <?php if ($listings): foreach($listings as $item): ?>
         <div class="card">
             <?php if ($item['image']): ?><img src="<?php echo $item['image']; ?>" style="max-width:120px;float:right;margin-left:1rem;"><?php endif; ?>
@@ -69,7 +114,12 @@ $stmt->close();
             <span>Category: <?php echo htmlspecialchars($item['category']); ?></span><br>
             <span>Price: $<?php echo $item['price_per_day']; ?>/day</span><br>
             <span>Owner: <?php echo htmlspecialchars($item['name']); ?></span><br>
-            <a href="rent_item.php?id=<?php echo $item['id']; ?>" class="btn" style="margin-top:0.5rem;">Rent This</a>
+            <?php if(isset($_SESSION['user_id']) && $item['user_id'] != $_SESSION['user_id']): ?>
+                <form method="post" style="margin-top:0.5rem;display:inline;">
+                    <input type="hidden" name="rent_item_id" value="<?php echo $item['id']; ?>">
+                    <button class="btn" type="submit">Request to Rent</button>
+                </form>
+            <?php endif; ?>
         </div>
     <?php endforeach; else: ?>
         <p>No listings found.</p>

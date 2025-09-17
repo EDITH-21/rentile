@@ -30,6 +30,14 @@ $stmt->execute();
 $res = $stmt->get_result();
 $marketplace = $res->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
+// Fetch notifications for this user (owner)
+$notifs = [];
+$stmt = $conn->prepare('SELECT * FROM notifications WHERE user_id=? AND is_read=0 ORDER BY created_at DESC');
+$stmt->bind_param('i', $user_id);
+$stmt->execute();
+$res = $stmt->get_result();
+$notifs = $res->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -49,6 +57,19 @@ $stmt->close();
     </div>
 </div>
 <div class="container">
+    <?php if ($notifs): ?>
+        <div style="background:#fff3cd;color:#856404;padding:1rem 1.5rem;border-radius:6px;margin-bottom:1.5rem;">
+            <b>Notifications:</b>
+            <ul style="margin:0 0 0 1.2rem;">
+            <?php foreach($notifs as $n): ?>
+                <li>
+                    <?php echo htmlspecialchars($n['message']); ?>
+                    <?php if ($n['link']): ?><a href="<?php echo $n['link']; ?>" class="btn" style="margin-left:0.5rem;">View</a><?php endif; ?>
+                </li>
+            <?php endforeach; ?>
+            </ul>
+        </div>
+    <?php endif; ?>
     <h2>My Dashboard</h2>
     <a href="add_item.php" class="btn">Add Item for Rent</a>
     <h3 style="margin-top:2rem;">My Listings</h3>

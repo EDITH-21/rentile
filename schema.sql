@@ -30,14 +30,28 @@ CREATE TABLE transactions (
     listing_id INT NOT NULL,
     renter_id INT NOT NULL,
     owner_id INT NOT NULL,
-    rent_date DATE NOT NULL,
-    return_date DATE,
+    rent_start_date DATE NOT NULL,
+    rent_end_date DATE NOT NULL,
     amount DECIMAL(10,2) NOT NULL,
     status ENUM('pending','completed','cancelled') DEFAULT 'pending',
+    payment_method VARCHAR(50) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (listing_id) REFERENCES listings(id) ON DELETE CASCADE,
     FOREIGN KEY (renter_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
+);
+-- Reviews table
+CREATE TABLE reviews (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    transaction_id INT NOT NULL,
+    reviewer_id INT NOT NULL,
+    reviewee_id INT NOT NULL,
+    rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    comment TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE CASCADE,
+    FOREIGN KEY (reviewer_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (reviewee_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE admin (

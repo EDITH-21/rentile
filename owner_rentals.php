@@ -26,7 +26,7 @@ if (isset($_POST['action'], $_POST['tx_id'])) {
             $stmt->close();
             // Notify renter
             $msg = 'Your rental request for "' . $tx['title'] . '" was approved!';
-            $link = 'dashboard.php';
+            $link = 'rental_details.php?id=' . $tx_id;
             $stmt = $conn->prepare('INSERT INTO notifications (user_id, message, link) VALUES (?, ?, ?)');
             $stmt->bind_param('iss', $tx['renter_id'], $msg, $link);
             $stmt->execute();
@@ -38,7 +38,7 @@ if (isset($_POST['action'], $_POST['tx_id'])) {
             $stmt->close();
             // Notify renter
             $msg = 'Your rental request for "' . $tx['title'] . '" was rejected.';
-            $link = 'dashboard.php';
+            $link = 'rental_details.php?id=' . $tx_id;
             $stmt = $conn->prepare('INSERT INTO notifications (user_id, message, link) VALUES (?, ?, ?)');
             $stmt->bind_param('iss', $tx['renter_id'], $msg, $link);
             $stmt->execute();

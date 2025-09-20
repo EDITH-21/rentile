@@ -102,6 +102,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <b><?php echo htmlspecialchars($item['title']); ?></b>
             <span class="status-badge <?php echo $item['status']; ?>"><?php echo ucfirst($item['status']); ?></span>
             <a href="edit_item.php?id=<?php echo $item['id']; ?>" class="btn" style="margin-top:0.5rem;">Edit</a>
+            <a href="chat.php?listing_id=<?php echo $item['id']; ?>" class="btn" style="margin-top:0.5rem;background:#4caf50;">Chat</a>
         </div>
     <?php endforeach; else: ?>
         <p>No items listed yet.</p>
@@ -147,7 +148,8 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="card">
             <b><?php echo htmlspecialchars($r['title']); ?></b><br>
             Rented on: <?php echo $r['rent_date']; ?> | Amount: $<?php echo $r['amount']; ?> | Status: <?php echo ucfirst($r['status']); ?><br>
-            Payment Method: <span style="color:#007bff;"><?php echo htmlspecialchars($r['payment_method'] ?? ''); ?></span>
+            Payment Method: <span style="color:#007bff;"><?php echo htmlspecialchars($r['payment_method'] ?? ''); ?></span><br>
+            <a href="chat.php?listing_id=<?php echo $r['listing_id']; ?>" class="btn" style="margin-top:0.5rem;background:#4caf50;">Chat with Owner</a>
         </div>
     <?php endforeach; else: ?>
         <p>No rentals yet.</p>

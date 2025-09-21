@@ -11,6 +11,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $address = trim($_POST['address']);
     $id_proof = '';
     
+    // Validate CAPTCHA
+    if (!validate_captcha($_POST['captcha'] ?? '')) {
+        $errors[] = 'Invalid CAPTCHA answer.';
+    }
+    
     // File upload
     if (isset($_FILES['id_proof']) && $_FILES['id_proof']['error'] === UPLOAD_ERR_OK) {
         $ext = pathinfo($_FILES['id_proof']['name'], PATHINFO_EXTENSION);
@@ -85,6 +90,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <input type="text" name="address">
         <label>ID Proof (image/pdf)</label>
         <input type="file" name="id_proof" accept="image/*,application/pdf">
+        <label>CAPTCHA: <?php echo generate_captcha(); ?></label>
+        <input type="text" name="captcha" required>
         <button class="btn" type="submit">Register</button>
     </form>
     <p>Already have an account? <a href="login.php">Login</a></p>

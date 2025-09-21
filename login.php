@@ -6,26 +6,34 @@ $errors = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email']);
     $password = $_POST['password'];
-    $stmt = $conn->prepare('SELECT id, password, status FROM users WHERE email=?');
-    $stmt->bind_param('s', $email);
-    $stmt->execute();
-    $stmt->store_result();
-    if ($stmt->num_rows === 1) {
-        $stmt->bind_result($id, $hash, $status);
-        $stmt->fetch();
-        if ($status === 'suspended') {
-            $errors[] = 'Account suspended. Contact support.';
-        } elseif (password_verify($password, $hash)) {
-            $_SESSION['user_id'] = $id;
-            header('Location: dashboard.php');
-            exit;
+
+    // Validate CAPTCHA
+    if (!validate_captcha($_POST['captcha'] ?? '')) {
+        $errors[] = 'Invalid CAPTCHA answer.';
+    }
+
+    if (empty($errors)) {
+        $stmt = $conn->prepare('SELECT id, password, status FROM users WHERE email=?');
+        $stmt->bind_param('s', $email);
+        $stmt->execute();
+        $stmt->store_result();
+        if ($stmt->num_rows === 1) {
+            $stmt->bind_result($id, $hash, $status);
+            $stmt->fetch();
+            if ($status === 'suspended') {
+                $errors[] = 'Account suspended. Contact support.';
+            } elseif (password_verify($password, $hash)) {
+                $_SESSION['user_id'] = $id;
+                header('Location: dashboard.php');
+                exit;
+            } else {
+                $errors[] = 'Invalid credentials.';
+            }
         } else {
             $errors[] = 'Invalid credentials.';
         }
-    } else {
-        $errors[] = 'Invalid credentials.';
+        $stmt->close();
     }
-    $stmt->close();
 }
 ?>
 <!DOCTYPE html>
@@ -59,6 +67,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <input type="email" name="email" required>
         <label>Password</label>
         <input type="password" name="password" required>
+        <label>CAPTCHA: <?php echo generate_captcha(); ?></label>
+        <input type="text" name="captcha" required>
         <button class="btn" type="submit">Login</button>
     </form>
     <p>Don't have an account? <a href="register.php">Register</a></p>

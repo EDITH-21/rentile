@@ -10,45 +10,52 @@ if (isset($_POST['rent_item_id']) && isset($_SESSION['user_id'])) {
     $start_date = $_POST['rent_start_date'] ?? '';
     $end_date = $_POST['rent_end_date'] ?? '';
     $payment_method = $_POST['payment_method'] ?? '';
-    // Validate dates and payment method
-    if (!$start_date || !$end_date || $start_date > $end_date) {
-        $success_msg = 'Please select a valid rental period.';
-    } elseif (!$payment_method) {
-        $success_msg = 'Please select a payment method.';
+    $captcha_input = $_POST['captcha'] ?? '';
+
+    // Validate CAPTCHA
+    if (!validate_captcha($captcha_input)) {
+        $success_msg = 'Invalid CAPTCHA answer.';
     } else {
-        // Get item and owner
-        $stmt = $conn->prepare('SELECT * FROM listings WHERE id=? AND status="approved"');
-        $stmt->bind_param('i', $item_id);
-        $stmt->execute();
-        $res = $stmt->get_result();
-        $item = $res->fetch_assoc();
-        $stmt->close();
-        if ($item && $item['user_id'] != $user_id) {
-            $owner_id = $item['user_id'];
-            $amount = $item['price_per_day'] * (1 + (strtotime($end_date) - strtotime($start_date)) / 86400);
-            // Check if already requested
-            $stmt = $conn->prepare('SELECT id FROM transactions WHERE listing_id=? AND renter_id=? AND status="pending"');
-            $stmt->bind_param('ii', $item_id, $user_id);
+        // Validate dates and payment method
+        if (!$start_date || !$end_date || $start_date > $end_date) {
+            $success_msg = 'Please select a valid rental period.';
+        } elseif (!$payment_method) {
+            $success_msg = 'Please select a payment method.';
+        } else {
+            // Get item and owner
+            $stmt = $conn->prepare('SELECT * FROM listings WHERE id=? AND status="approved"');
+            $stmt->bind_param('i', $item_id);
             $stmt->execute();
-            $stmt->store_result();
-            if ($stmt->num_rows == 0) {
-                $stmt->close();
-                // Create pending transaction with payment method
-                $stmt = $conn->prepare('INSERT INTO transactions (listing_id, renter_id, owner_id, rent_start_date, rent_end_date, amount, status, payment_method) VALUES (?, ?, ?, ?, ?, ?, "pending", ?)');
-                $stmt->bind_param('iiissds', $item_id, $user_id, $owner_id, $start_date, $end_date, $amount, $payment_method);
+            $res = $stmt->get_result();
+            $item = $res->fetch_assoc();
+            $stmt->close();
+            if ($item && $item['user_id'] != $user_id) {
+                $owner_id = $item['user_id'];
+                $amount = $item['price_per_day'] * (1 + (strtotime($end_date) - strtotime($start_date)) / 86400);
+                // Check if already requested
+                $stmt = $conn->prepare('SELECT id FROM transactions WHERE listing_id=? AND renter_id=? AND status="pending"');
+                $stmt->bind_param('ii', $item_id, $user_id);
                 $stmt->execute();
-                $tx_id = $stmt->insert_id;
-                $stmt->close();
-                // Notify owner
-                $msg = 'Your item "' . $item['title'] . '" has a new rental request.';
-                $link = 'rental_details.php?id=' . $tx_id;
-                $stmt = $conn->prepare('INSERT INTO notifications (user_id, message, link) VALUES (?, ?, ?)');
-                $stmt->bind_param('iss', $owner_id, $msg, $link);
-                $stmt->execute();
-                $stmt->close();
-                $success_msg = 'Rental request sent! The owner will confirm.';
-            } else {
-                $success_msg = 'You have already requested to rent this item.';
+                $stmt->store_result();
+                if ($stmt->num_rows == 0) {
+                    $stmt->close();
+                    // Create pending transaction with payment method
+                    $stmt = $conn->prepare('INSERT INTO transactions (listing_id, renter_id, owner_id, rent_start_date, rent_end_date, amount, status, payment_method) VALUES (?, ?, ?, ?, ?, ?, "pending", ?)');
+                    $stmt->bind_param('iiissds', $item_id, $user_id, $owner_id, $start_date, $end_date, $amount, $payment_method);
+                    $stmt->execute();
+                    $tx_id = $stmt->insert_id;
+                    $stmt->close();
+                    // Notify owner
+                    $msg = 'Your item "' . $item['title'] . '" has a new rental request.';
+                    $link = 'rental_details.php?id=' . $tx_id;
+                    $stmt = $conn->prepare('INSERT INTO notifications (user_id, message, link) VALUES (?, ?, ?)');
+                    $stmt->bind_param('iss', $owner_id, $msg, $link);
+                    $stmt->execute();
+                    $stmt->close();
+                    $success_msg = 'Rental request sent! The owner will confirm.';
+                } else {
+                    $success_msg = 'You have already requested to rent this item.';
+                }
             }
         }
     }
